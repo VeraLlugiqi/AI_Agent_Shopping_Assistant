@@ -1,113 +1,106 @@
-# shopping-assistant
+# Secure Multi-Agent Shopping Assistant
 
-Secure multi-agent retail shopping assistant generated with `agents-cli` version `0.5.0`.
-
-This project is designed as a Kaggle Capstone submission. It demonstrates an ADK-based shopping assistant that uses a small multi-agent workflow while preserving security-oriented discount redemption controls.
+This project is a Kaggle Capstone submission for the 5-Day AI Agents course. It demonstrates a secure shopping assistant built with Google ADK, a small multi-agent workflow, tool calling, Pydantic validation, and security documentation.
 
 ## Problem Statement
 
-Retail shopping assistants need to answer product, discount, and policy questions without letting user prompts bypass business rules. This project shows how a manager agent can coordinate specialist agents while sensitive actions, such as redeeming a single-use discount code, stay behind validated Python tool logic.
+Retail shopping assistants need to answer product, discount, and policy questions without allowing user prompts to bypass business rules. Discount redemption is sensitive because a user should not be able to redeem invalid codes, reuse single-use codes, or claim a discount as a guest account.
 
 ## Solution
 
-The Shopping Manager Agent handles normal shopping help and delegates only the tasks that benefit from specialist behavior:
+The assistant uses a manager agent that handles normal shopping requests and delegates specialized tasks to smaller agents:
 
-- discount-code redemption goes to a tool-using Discount Agent
-- general store policy questions go to an FAQ Agent
+- discount-code redemption goes to the Discount Agent
+- general store policy questions go to the FAQ Agent
 
-This keeps the architecture simple enough for a Capstone project while clearly demonstrating ADK, multi-agent routing, tool calling, agent skills, and security controls.
+Sensitive discount logic is implemented in a Python tool, not only in the prompt. This keeps business rules testable and easier to secure.
 
 ## Multi-Agent Architecture
 
-```
+```text
 Shopping Manager Agent
         |
         +-- Discount Agent
         +-- FAQ Agent
 ```
 
-- **Shopping Manager Agent** answers ordinary shopping and product questions, then routes specialist requests.
-- **Discount Agent** handles discount-code redemption and calls `redeem_discount_code`.
-- **FAQ Agent** answers general shopping, return, shipping, sizing, and policy questions.
+- **Shopping Manager Agent** answers ordinary shopping questions and routes specialist requests.
+- **Discount Agent** handles discount redemption and calls `redeem_discount_code`.
+- **FAQ Agent** answers return, shipping, sizing, and policy questions.
 
 ## Capstone Concepts Demonstrated
 
 - **ADK agent**: the project exports an ADK `app` from `app/agent.py`.
 - **Multi-agent workflow**: one manager agent delegates to two specialist agents.
 - **Tool calling**: the Discount Agent uses the `redeem_discount_code` Python tool.
+- **Pydantic validation**: discount tool input is validated with `DiscountRedemptionRequest`.
 - **Agent skill**: the project includes a local STRIDE threat-modeling skill.
-- **Security features**: discount redemption validates tool inputs, rejects guest users, enforces single-use codes, and is documented with STRIDE analysis.
-- **Security-oriented development**: `.agents/CONTEXT.md`, hooks, pre-commit configuration, Semgrep, and unit tests support safer changes.
+- **Security features**: discount redemption rejects guest users, validates input, enforces single-use codes, and is documented with STRIDE analysis.
+- **Testing and documentation**: the project includes pytest tests, README documentation, and a threat model.
 
 ## Project Structure
 
-```
+```text
 shopping-assistant/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic
-│   └── app_utils/             # App utilities and helpers
-├── tests/                     # Unit, integration, and load tests
-├── GEMINI.md                  # AI-assisted development guide
-└── pyproject.toml             # Project dependencies
++-- app/
+|   +-- agent.py               # Main ADK agent, sub-agents, tool, and app export
+|   +-- fast_api_app.py         # Optional FastAPI wrapper for serving the agent
+|   +-- app_utils/              # Telemetry and shared Pydantic types
++-- tests/
+|   +-- test_agent.py           # Main project tests
+|   +-- unit/                   # Unit-test scaffold
+|   +-- integration/            # Optional integration-test scaffold
+|   +-- eval/                   # Optional evaluation scaffold
++-- .agents/
+|   +-- CONTEXT.md              # Local secure coding guidance
+|   +-- skills/                 # Local agent skill files
++-- threat_model.md             # STRIDE threat model
++-- Dockerfile                  # Optional container runtime
++-- pyproject.toml              # Python dependencies and tool config
++-- uv.lock                     # Locked dependency versions
++-- README.md
 ```
-
-> 💡 **Tip:** Use [Gemini CLI](https://github.com/google-gemini/gemini-cli) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
 
 ## Requirements
 
-Before you begin, ensure you have:
-- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
-- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
-- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
-
+- Python 3.11+
+- `uv`
+- Google ADK / agents-cli dependencies from `pyproject.toml`
+- Gemini API key only if you want live model responses in ADK Playground
 
 ## Quick Start
 
-Install `agents-cli` and its skills if not already installed:
+Install dependencies:
 
 ```bash
-uvx google-agents-cli setup
+uv sync
 ```
 
-Install required packages:
+Run the main tests:
 
 ```bash
-agents-cli install
+uv run pytest tests/test_agent.py
 ```
 
-Test the agent with a local web server:
+Run the agent in ADK Playground:
 
 ```bash
-agents-cli playground
+uv run adk web . --host 127.0.0.1 --port 8000 --session_service_uri memory:// --artifact_service_uri memory://
 ```
 
-For local model access, configure your Gemini credentials through environment variables such as `GOOGLE_API_KEY` or Vertex AI settings. Do not commit API keys or passwords to the repository.
+Then open:
 
-You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
+```text
+http://127.0.0.1:8000
+```
 
-## Commands
+For live model responses, set a Gemini API key before starting the playground:
 
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `agents-cli install` | Install dependencies using uv                                                         |
-| `agents-cli playground` | Launch local development environment                                                  |
-| `agents-cli lint`    | Run code quality checks                                                               |
-| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
-| `uv run pytest tests/test_agent.py` | Run the main agent and tool tests                                                        |
+```powershell
+$env:GOOGLE_API_KEY="YOUR_API_KEY"
+```
 
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
-
----
-
-## Development
-
-Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+Do not commit API keys, passwords, or local `.env` files.
 
 ## Example User Prompts
 
@@ -126,21 +119,12 @@ What should I know before returning an online order?
 ## Suggested 5-Minute Demo Flow
 
 1. Explain the retail shopping problem and why tool-protected agents are useful.
-2. Show the architecture diagram: Shopping Manager, Discount Agent, and FAQ Agent.
-3. Demo a normal shopping question handled by the manager.
-4. Demo a discount redemption handled by the Discount Agent and Python tool.
-5. Mention security controls: Pydantic validation, guest-user rejection, single-use discounts, STRIDE skill, hooks, and tests.
+2. Show the architecture: Shopping Manager Agent, Discount Agent, and FAQ Agent.
+3. Show `app/agent.py`, including the agents, Pydantic model, and discount tool.
+4. Run `uv run pytest tests/test_agent.py`.
+5. Show security artifacts: `.agents/CONTEXT.md`, the STRIDE skill, and `threat_model.md`.
+6. If Gemini quota is unavailable, explain that live model calls require active Gemini API quota, while the code, tests, architecture, and documentation are included in the repository.
 
 ## Deployment
 
-```bash
-gcloud config set project <your-project-id>
-agents-cli deploy
-```
-
-To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
-To set up your production infrastructure, run `agents-cli infra cicd`.
-
-## Observability
-
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+Deployment is not required for the Capstone. The included `Dockerfile` is provided as an optional container runtime if the agent is later deployed.
