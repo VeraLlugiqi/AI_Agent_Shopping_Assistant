@@ -42,7 +42,7 @@ Shopping Manager Agent
 - STRIDE threat model for security analysis
 - Local agent skill for threat modeling
 - Pytest coverage for the core business logic
-- Optional Dockerfile for container-based runtime
+- Dockerfile for container-based runtime
 
 ## Technologies
 
@@ -112,14 +112,6 @@ Then open:
 http://127.0.0.1:8000
 ```
 
-For live model responses, set a Gemini API key before starting the playground:
-
-```powershell
-$env:GOOGLE_API_KEY="YOUR_API_KEY"
-```
-
-Do not commit API keys, passwords, local `.env` files, `.venv`, or cache folders.
-
 ## Example User Prompts
 
 ```text
@@ -134,26 +126,3 @@ I want to redeem WELCOME50. My registered user ID is user_123.
 What should I know before returning an online order?
 ```
 
-## Screenshots
-
-Recommended screenshots for the Kaggle writeup:
-
-- ADK Playground graph showing `shopping_manager_agent`, `discount_agent`, and `faq_agent`
-- Terminal output showing `uv run pytest tests/test_agent.py` with `6 passed`
-- Code view of `app/agent.py` showing the manager agent, sub-agents, Pydantic model, and discount tool
-- Security artifacts showing `.agents/CONTEXT.md`, the STRIDE skill, and `threat_model.md`
-
-If Gemini quota is unavailable during recording, the screenshots can still show the ADK architecture, passing tests, and source code. Live model responses require active Gemini API quota.
-
-## Demo Flow
-
-1. Explain the retail shopping problem and why tool-protected agents are useful.
-2. Show the architecture: Shopping Manager Agent, Discount Agent, and FAQ Agent.
-3. Show `app/agent.py`, including the agents, Pydantic model, and discount tool.
-4. Run `uv run pytest tests/test_agent.py`.
-5. Show security artifacts: `.agents/CONTEXT.md`, the STRIDE skill, and `threat_model.md`.
-6. Mention that live model calls require active Gemini API quota.
-
-## Deployment
-
-Deployment is not required for the Capstone. The included `Dockerfile` is provided as an optional container runtime if the agent is later deployed.
